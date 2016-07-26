@@ -7,8 +7,8 @@
 #include "helpers.hpp"
 #include "redirect.hpp"
 
-duk_context *ctx = nullptr;
 ClientSocket* clientSocket = nullptr;
+duk_context* initialCtx;
 char apiPath[256] = { 0 };
 char* apiOverride = nullptr;
 bool hasApiPath = false;
@@ -23,20 +23,26 @@ void require(duk_context* ctx, char* base_path, char* override_path, const char*
     duk_eval_file(ctx, base_path);
 }
 
-static void socketRecv(ClientSocket* clientSocket)
+struct ThreadData
+{
+	ClientSocket* clientSocket;
+	duk_context* ctx;
+};
+
+static void socketRecv(ThreadData* threadData)
 {
     duk_idx_t thr_idx;
     duk_context *new_ctx;
 
-    thr_idx = duk_push_thread(ctx);
-    new_ctx = duk_get_context(ctx, thr_idx);
+    thr_idx = duk_push_thread(threadData->ctx);
+    new_ctx = duk_get_context(threadData->ctx, thr_idx);
 
 	std::string oldBuffer = "";
 	uint16_t currentLen = -1;
 	bool isNew = true;
     while (1)
     {
-        std::string buffer = clientSocket->recv();
+        std::string buffer = threadData->clientSocket->recv();
 		oldBuffer += buffer;
 
 		while (oldBuffer.length() >= 2)
@@ -65,6 +71,8 @@ static void socketRecv(ClientSocket* clientSocket)
 			}
 		}
     }
+
+	delete threadData;
 }
 
 duk_context* apecore_initialize(ExtendedInit ext)
@@ -85,8 +93,8 @@ duk_context* apecore_initialize(ExtendedInit ext)
 		hasApiPath = len > 0;
 	}
 
-	// TODO: Remove ctx from global scope
-	ctx = apecore_createHeap(ext);
+	duk_context* ctx = apecore_createHeap(ext);
+	initialCtx = ctx;
 
 	// Custom user init code
 	require(ctx, apiPath, apiOverride, "../../init.js");
@@ -97,7 +105,7 @@ duk_context* apecore_initialize(ExtendedInit ext)
     }
     else
     {
-        createThread((ThreadFunction)socketRecv, clientSocket);
+		createThread((ThreadFunction)socketRecv, new ThreadData{ clientSocket, ctx });
     }
 
     return ctx;
@@ -156,7 +164,6 @@ duk_context* apecore_createHeap(ExtendedInit ext)
 
 int apecore_deinitialize()
 {
-    duk_destroy_heap(ctx);
-
+    duk_destroy_heap(initialCtx);
     return 1;
 }
