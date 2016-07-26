@@ -104,7 +104,7 @@ MemoryFunction* getRedirect(Allocator* allocator, duk_context *ctx)
 
 duk_ret_t initializeRedirection(duk_context *ctx)
 {
-	MemoryFunction* mem = getRedirect(allocator);
+	MemoryFunction* mem = getRedirect(allocator, ctx);
 
 	int n = duk_get_top(ctx);  /* #args */
 
