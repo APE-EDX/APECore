@@ -154,6 +154,10 @@ duk_context* apecore_createHeap(ExtendedInit ext)
 	duk_push_c_function(ctx, readString, DUK_VARARGS);
 	duk_put_global_string(ctx, "cpp_readString");
 
+	duk_push_c_function(ctx, sigScan, DUK_VARARGS);
+	duk_put_global_string(ctx, "SigScan");
+	
+
     if (hasApiPath)
     {
         // Add all API files

@@ -11,3 +11,5 @@ duk_ret_t fromCharCode(duk_context *ctx);
 duk_ret_t writeMemory(duk_context *ctx);
 duk_ret_t readMemory(duk_context *ctx);
 duk_ret_t readString(duk_context *ctx);
+
+duk_ret_t sigScan(duk_context* ctx);
