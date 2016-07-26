@@ -1,6 +1,6 @@
 file(GLOB CPP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 file(GLOB HPP_INCLUDES ${PROJECT_SOURCE_DIR}/include/*.hpp)
-set(ALL_SOURCES ${CPP_SOURCES} ${HPP_SOURCES})
+set(ALL_SOURCES ${CPP_SOURCES} ${HPP_SOURCES} ${DUKTAPE_SOURCES})
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
@@ -12,7 +12,7 @@ include_directories(
 
 add_library(APECore STATIC ${ALL_SOURCES})
 
-target_link_libraries(APECore capstone-static)
+target_link_libraries(APECore PUBLIC capstone-static)
 target_compile_features(APECore PRIVATE cxx_range_for)
 
 if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")

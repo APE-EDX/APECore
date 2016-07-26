@@ -9,7 +9,9 @@
 
 duk_context *ctx = nullptr;
 ClientSocket* clientSocket = nullptr;
-
+char apiPath[256] = { 0 };
+char* apiOverride = nullptr;
+bool hasApiPath = false;
 
 void require(duk_context* ctx, char* base_path, char* override_path, const char* file)
 {
@@ -65,11 +67,29 @@ static void socketRecv(ClientSocket* clientSocket)
     }
 }
 
-duk_context* initialize()
+duk_context* apecore_initialize(ExtendedInit ext)
 {
     // Create socket
     clientSocket = new ClientSocket(AF_INET, SOCK_STREAM, 0);
     clientSocket->connect("127.0.0.1", 25100);
+
+	// Get current path
+	{
+		size_t len = getLibraryPath(apiPath, sizeof(apiPath));
+
+		// Find last / and
+		while (len > 0 && apiPath[--len] != '\\') {};
+
+		// Overwrite path from here on
+		apiOverride = &apiPath[len + 1];
+		hasApiPath = len > 0;
+	}
+
+	// TODO: Remove ctx from global scope
+	ctx = apecore_createHeap(ext);
+
+	// Custom user init code
+	require(ctx, apiPath, apiOverride, "../../init.js");
 
     if (clientSocket->lastError() != SocketError::NONE)
     {
@@ -80,13 +100,10 @@ duk_context* initialize()
         createThread((ThreadFunction)socketRecv, clientSocket);
     }
 
-    // TODO: Remove ctx from global scope
-    ctx = createHeap();
-
     return ctx;
 }
 
-duk_context* createHeap()
+duk_context* apecore_createHeap(ExtendedInit ext)
 {
     duk_context* ctx = duk_create_heap_default();
 
@@ -114,26 +131,20 @@ duk_context* createHeap()
 	duk_push_c_function(ctx, readString, DUK_VARARGS);
 	duk_put_global_string(ctx, "cpp_readString");
 
-    // Get current path
-    char path[256];
-    size_t len = getLibraryPath(path, sizeof(path));
-
-    // Find last / and
-    while (len > 0 && path[--len] != '\\') {};
-    if (len > 0)
+    if (hasApiPath)
     {
-        // Overwrite path from here on
-        char* override_from = &path[len + 1];
-
         // Add all API files
-        require(ctx, path, override_from, "../../jsAPI/eval_js.js");
-        require(ctx, path, override_from, "../../jsAPI/call_convention.js");
-        require(ctx, path, override_from, "../../jsAPI/ptr.js");
-        require(ctx, path, override_from, "../../jsAPI/find.js");
-        require(ctx, path, override_from, "../../jsAPI/redirect.js");
+        require(ctx, apiPath, apiOverride, "../../jsAPI/eval_js.js");
+        require(ctx, apiPath, apiOverride, "../../jsAPI/call_convention.js");
+        require(ctx, apiPath, apiOverride, "../../jsAPI/ptr.js");
+        require(ctx, apiPath, apiOverride, "../../jsAPI/find.js");
+        require(ctx, apiPath, apiOverride, "../../jsAPI/redirect.js");
 
-        // Custom user init code
-        require(ctx, path, override_from, "../../init.js");
+		// Call callback
+		if (ext)
+		{
+			(*ext)(ctx);
+		}
     }
     else
     {
@@ -143,7 +154,7 @@ duk_context* createHeap()
     return ctx;
 }
 
-int deinitialize()
+int apecore_deinitialize()
 {
     duk_destroy_heap(ctx);
 
