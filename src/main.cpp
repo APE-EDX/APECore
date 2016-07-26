@@ -1,6 +1,7 @@
 #include "socket.hpp"
 
 #include <duktape.h>
+#include <capstone.h>
 #include <vector>
 
 #include "apecore.hpp"
@@ -12,6 +13,9 @@ duk_context* initialCtx;
 char apiPath[256] = { 0 };
 char* apiOverride = nullptr;
 bool hasApiPath = false;
+
+csh capstoneHandle;
+
 
 void require(duk_context* ctx, char* base_path, char* override_path, const char* file)
 {
@@ -95,6 +99,17 @@ duk_context* apecore_initialize(ExtendedInit ext)
 
 	duk_context* ctx = apecore_createHeap(ext);
 	initialCtx = ctx;
+
+	// Initialize capstone
+#ifdef BUILD_64
+	cs_mode mode = CS_MODE_64;
+#else
+	cs_mode mode = CS_MODE_32;
+#endif
+	if (cs_open(CS_ARCH_X86, mode, &capstoneHandle) != CS_ERR_OK)
+	{
+		// Notify of the error
+	}
 
 	// Custom user init code
 	require(ctx, apiPath, apiOverride, "../../init.js");

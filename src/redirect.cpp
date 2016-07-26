@@ -2,10 +2,14 @@
 #include "helpers.hpp"
 #include "asm.hpp"
 
+#include <capstone.h>
 
 Allocator* allocator = new Allocator();
 MemoryFunction* redirectDetour = nullptr;
 MemoryFunction* redirectCallorigin = nullptr;
+
+extern csh capstoneHandle;
+
 
 #ifdef BUILD_64
 
@@ -129,7 +133,7 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 	duk_dup(ctx, 4);
 	duk_put_global_string(ctx, name);
 
-	int len = 12;
+	int len = 0;
 	if (n > 5)
 	{
 		len = duk_to_int(ctx, 5);
@@ -137,6 +141,17 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 	else
 	{
 		// Static analysis to find the number of bytes
+		int i = 0;
+		cs_insn *insn;
+		size_t count = cs_disasm(capstoneHandle, (uint8_t*)address, 30, address, 0, &insn);
+
+		while (count > 0 && len < 12)
+		{
+			len += insn[i].size;
+			--count;
+		}
+
+		cs_free(insn, count);
 	}
 
 	// 5 push + 1 push + 2 mov + 2 push + 5 push + 5 call + 3 retn
@@ -362,7 +377,7 @@ duk_ret_t initializeRedirection(duk_context *ctx)
     duk_dup(ctx, 4);
     duk_put_global_string(ctx, name);
 
-	int len = 5;
+	int len = 0;
 	if (n > 5)
 	{
 		len = duk_to_int(ctx, 5);
@@ -370,6 +385,17 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 	else
 	{
 		// Static analysis to find the number of bytes
+		int i = 0;
+		cs_insn *insn;
+		size_t count = cs_disasm(capstoneHandle, (uint8_t*)address, 30, address, 0, &insn);
+
+		while (count > 0 && len < 5)
+		{
+			len += insn[i].size;
+			--count;
+		}
+
+		cs_free(insn, count);
 	}
 
     // 5 push + 1 push + 2 mov + 2 push + 5 push + 5 call + 3 retn
