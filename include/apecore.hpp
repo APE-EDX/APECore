@@ -10,8 +10,8 @@ int deinitialize();
 // Interface enums
 enum class VirtualState
 {
-    MEM_FREE,
-    MEM_RESERVED
+    FREE,
+    RESERVED
 };
 enum class MemoryProtect
 {

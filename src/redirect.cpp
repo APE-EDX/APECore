@@ -433,7 +433,7 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 
 	for (int i = 0; i < 5; ++i)
 	{
-		call_org << *(BYTE*)(address + i);
+		call_org << *(uint8_t*)(address + i);
 	}
 	jmp_long(call_org, (void*)(address + len));
 
@@ -476,7 +476,7 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 		*(uint8_t*)(address + i) = 0x90;
 	}
 
-	virtualMemoryProtect((void*)orig, 5, oldProtect, &oldProtect);
+	virtualMemoryProtect((void*)address, 5, oldProtect, &oldProtect);
 
     return 0;  /* undefined, default */
 }

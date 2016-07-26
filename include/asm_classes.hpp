@@ -33,7 +33,7 @@ public:
 							address = (void*)((uintptr_t)address + i * 0x10000);
 							VirtualState state = virtualMemoryState(address);
 
-							if (state == VirtualState::MEM_FREE)
+							if (state == VirtualState::FREE)
 							{
 								mem = (uintptr_t)virtualMemoryCommit(address, 0x10000, MemoryProtect::EXECUTE_READWRITE);
 								if (mem)
