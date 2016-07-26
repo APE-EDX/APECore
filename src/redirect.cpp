@@ -149,6 +149,7 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 		{
 			len += insn[i].size;
 			--count;
+			++i;
 		}
 
 		cs_free(insn, count);
@@ -393,6 +394,7 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 		{
 			len += insn[i].size;
 			--count;
+			++i;
 		}
 
 		cs_free(insn, count);
