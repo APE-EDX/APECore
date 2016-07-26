@@ -1,0 +1,8 @@
+# -[ Duktape
+set(DUKTAPE_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/duktape-1.5.0/src/ CACHE INTERNAL "")
+set(DUKTAPE_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/duktape-1.5.0/src/duktape.c CACHE INTERNAL "")
+
+# -[ Capstone
+set(CAPSTONE_BUILD_SHARED OFF CACHE INTERNAL "")
+set(CAPSTONE_BUILD_TESTS OFF CACHE INTERNAL "")
+add_subdirectory(capstone)
