@@ -6,7 +6,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
 
-    ${DUKTAPE_INCLUDE} 
+    ${DUKTAPE_INCLUDE}
     ${PROJECT_SOURCE_DIR}/deps/capstone/include
 )
 
