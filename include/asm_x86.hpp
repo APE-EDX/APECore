@@ -8,6 +8,7 @@ inline void push_ebp(MemoryFunction& fn) { fn << (uint8_t)0x55; }
 inline void push_ecx(MemoryFunction& fn) { fn << (uint8_t)0x51; }
 inline void push_edi(MemoryFunction& fn) { fn << (uint8_t)0x57; }
 
+inline void pop_eax(MemoryFunction& fn) { fn << (uint8_t)0x58; }
 inline void pop_edi(MemoryFunction& fn) { fn << (uint8_t)0x5F; }
 inline void pop_ebx(MemoryFunction& fn) { fn << (uint8_t)0x5B; }
 inline void pop_ecx(MemoryFunction& fn) { fn << (uint8_t)0x59; }
@@ -73,6 +74,13 @@ inline void mov_eax_abs(MemoryFunction& fn, uint32_t val)
 	fn << val;
 }
 
+inline void mov_ecx_abs(MemoryFunction& fn, uint32_t val)
+{
+	fn << (uint8_t)0xB9;
+	fn << val;
+}
+
+
 inline void mov_ecx_ebx(MemoryFunction& fn)
 {
 	fn << (uint16_t)0xCB8B;
@@ -123,10 +131,11 @@ inline void inc_edi(MemoryFunction& fn)
 	fn << (uint8_t)0x47;
 }
 
-inline void call(MemoryFunction& fn, void* callee)
+template <typename T>
+inline void call(MemoryFunction& fn, T callee)
 {
 	fn << (uint8_t)0xE8;
-	fn << (uint32_t)(((uintptr_t)callee - (fn.get() - 1)) - 5);
+	fn << (uint32_t)(((uintptr_t)(void*)callee - (fn.get() - 1)) - 5);
 }
 
 inline void call_eax(MemoryFunction& fn)

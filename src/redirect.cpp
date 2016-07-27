@@ -3,13 +3,27 @@
 #include "asm.hpp"
 
 #include <capstone.h>
+#include <mutex>
+
 
 Allocator* allocator = new Allocator();
 MemoryFunction* redirectDetour = nullptr;
 MemoryFunction* redirectCallorigin = nullptr;
+std::recursive_mutex ctxMutex;
+
 
 extern csh capstoneHandle;
 
+
+// Mutex operations (TODO: Option to disable thread-safety)
+void lock()
+{
+	ctxMutex.lock();
+}
+void unlock()
+{
+	ctxMutex.unlock();
+}
 
 #ifdef BUILD_64
 
@@ -225,7 +239,7 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 	sub_rsp_abs(call_org, 0x20);
 
 	// Return point
-	mov_rax_abs(call_org, (uint64_t)(call_org.get() + 28));
+	mov_rax_abs(call_org, (uint64_t)(call_org.get() + 16 + len));
 	push_rax(call_org);
 
 	for (int i = 0; i < len; ++i)
@@ -410,6 +424,9 @@ duk_ret_t initializeRedirection(duk_context *ctx)
         return 1;  /* one return value */
     }
 
+	// Lock mutex
+	call(codecave, lock);
+
 	// Fake return point
 	push(codecave, (uint32_t)codecave.get() + 20);
 
@@ -425,6 +442,11 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 
     // JMP WrapJS
 	jmp_long(codecave, mem->start());
+
+	// Unlock mutex
+	push_eax(codecave);
+	call(codecave, unlock);
+	pop_eax(codecave);
 
     // RETN args*4
     if (convention == CallConvention::STDCALL)
@@ -456,14 +478,22 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 		push_eax(call_org);
 	}
 
-	// Return point
-	push(call_org, (uint32_t)(call_org.get() + 15));
+	// Unlock
+	call(call_org, unlock);
 
-	for (int i = 0; i < 5; ++i)
+	// Return point
+	push(call_org, (uint32_t)(call_org.get() + 10 + len));
+
+	for (int i = 0; i < len; ++i)
 	{
 		call_org << *(uint8_t*)(address + i);
 	}
 	jmp_long(call_org, (void*)(address + len));
+
+	// Lock
+	push_eax(call_org);
+	call(call_org, lock);
+	pop_eax(call_org);
 
 	pop_ebp(call_org);
 
