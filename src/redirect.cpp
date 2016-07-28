@@ -24,6 +24,20 @@ void unlock()
 {
 	ctxMutex.unlock();
 }
+uintptr_t grabArgument(duk_context* ctx, duk_idx_t idx)
+{
+	if (duk_is_pointer(ctx, idx))
+	{
+		return (uintptr_t)duk_to_pointer(ctx, idx);
+	}
+
+	if (duk_is_string(ctx, idx))
+	{
+		return (uintptr_t)duk_to_string(ctx, idx);
+	}
+
+	return (uintptr_t)duk_to_int(ctx, idx);
+}
 
 #ifdef BUILD_64
 
@@ -101,7 +115,7 @@ MemoryFunction* getRedirect(Allocator* allocator, duk_context *ctx)
 		// Get returned value
 		mov_rdx_abs(fn, -1);
 		mov_rcx_abs(fn, (uint64_t)ctx);
-		call(fn, duk_to_pointer);
+		call(fn, grabArgument);
 
 		// Stack cleanup
 		pop_rdi(fn);
@@ -212,7 +226,7 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 	{
 		push_rcx(call_org);
 		mov_rdx_abs(call_org, i);
-		call(call_org, duk_to_pointer);
+		call(call_org, grabArgument);
 		pop_rcx(call_org);
 
 		push_rax(call_org);
@@ -348,7 +362,7 @@ MemoryFunction* getRedirect(Allocator* allocator, duk_context *ctx)
 
 		push(fn, (uint8_t)-1);
 		push(fn, (uint32_t)ctx);
-		call(fn, duk_to_pointer);
+		call(fn, grabArgument);
 		add_esp(fn, 8);
 
 		pop_edi(fn);
@@ -471,7 +485,7 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 		push_ecx(call_org);
 		push(call_org, (uint8_t)i);
 		push_ecx(call_org);
-		call(call_org, duk_to_pointer);
+		call(call_org, grabArgument);
 		add_esp(call_org, 8);
 		pop_ecx(call_org);
 
