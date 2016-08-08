@@ -13,7 +13,7 @@ include_directories(
 add_library(APECore STATIC ${ALL_SOURCES})
 
 if(UNIX)
-    set_target_properties(capstone-static
+    set_target_properties(capstone-static PROPERTIES
         POSITION_INDEPENDENT_CODE ON
     )
 endif()
