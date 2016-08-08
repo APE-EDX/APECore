@@ -12,13 +12,13 @@ include_directories(
 
 add_library(APECore STATIC ${ALL_SOURCES})
 
-if(WIN32)
-    set(capstoneLIB capstone-static)
-else()
-    set(capstoneLIB -Wl,--whole-archive capstone-static -Wl,--no-whole-archive)
+if(UNIX)
+    set_target_properties(capstone-static
+        POSITION_INDEPENDENT_CODE ON
+    )
 endif()
 
-target_link_libraries(APECore PUBLIC ${capstoneLIB})
+target_link_libraries(APECore PUBLIC capstone-static)
 target_compile_features(APECore PRIVATE cxx_range_for)
 
 if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
