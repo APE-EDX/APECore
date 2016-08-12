@@ -16,6 +16,14 @@ bool hasApiPath = false;
 
 csh capstoneHandle;
 
+#ifdef _WIN32
+    #define SEPARATOR_STR "\\"
+    #define SEPARATOR_CHR '\\'
+#else
+    #define SEPARATOR_STR "/"
+    #define SEPARATOR_CHR '/'
+#endif
+
 
 void require(duk_context* ctx, char* base_path, char* override_path, const char* file)
 {
@@ -90,7 +98,7 @@ duk_context* apecore_initialize(ExtendedInit ext)
 		size_t len = getLibraryPath(apiPath, sizeof(apiPath));
 
 		// Find last / and
-		while (len > 0 && apiPath[--len] != '\\') {};
+		while (len > 0 && apiPath[--len] != SEPARATOR_CHR) {};
 
 		// Overwrite path from here on
 		apiOverride = &apiPath[len + 1];
@@ -156,7 +164,7 @@ duk_context* apecore_createHeap(ExtendedInit ext)
 
 	duk_push_c_function(ctx, sigScan, DUK_VARARGS);
 	duk_put_global_string(ctx, "SigScan");
-	
+
 
     if (hasApiPath)
     {
