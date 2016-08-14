@@ -6,7 +6,7 @@
 #include <mutex>
 
 
-Allocator* allocator = new Allocator();
+Allocator* allocator = nullptr;
 MemoryFunction* redirectDetour = nullptr;
 MemoryFunction* redirectCallorigin = nullptr;
 std::recursive_mutex ctxMutex;
@@ -592,6 +592,7 @@ duk_ret_t createRedirection(duk_context *ctx)
 
 const char* fn_ptr = "fn_ptr";
 void InitializeDuktape_Redirect(duk_context *ctx) {
+	allocator = new Allocator();
 	redirectCallorigin = new MemoryFunction(allocator, 20);
 	MemoryFunction& fn = *redirectCallorigin;
 
@@ -666,7 +667,6 @@ void InitializeDuktape_Redirect(duk_context *ctx) {
 	mov_eax_abs(fn, 1);
 	ret(fn);
 #endif
-
 	/* Push constructor function; all Duktape/C functions are
 	* "constructable" and can be called as 'new Foo()'.
 	*/
