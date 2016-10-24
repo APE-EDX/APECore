@@ -7,6 +7,16 @@
 class Logger
 {
 public:
+    static Logger* global()
+    {
+        if (!_gLogger)
+        {
+            _gLogger = new Logger(true, false);
+        }
+
+        return _gLogger;
+    }
+
     Logger(bool writeToFile, bool writeToConsole) :
         _fp(nullptr),
         _writeToFile(writeToFile),
@@ -14,11 +24,20 @@ public:
     {
         if (writeToFile)
         {
-            // TODO(gpascualg): Is this correct?
+            // Get current path
             char path[256] = {0};
-            getLibraryPath(path, 256);
-            path = strcat(path, "apelog.txt");
 
+        	{
+        		size_t len = ape::platform::getLibraryPath(path, sizeof(path));
+
+        		// Find last / and
+        		while (len > 0 && path[--len] != SEPARATOR_CHR) {};
+
+        		// Overwrite path from here on
+                strcpy(&apiPath[len + 1], "apelog.txt");
+        	}
+
+            // Open file
             _fp = fopen(path, 'w+');
         }
     }
@@ -46,7 +65,11 @@ public:
     }
 
 private:
+    static Logger* _gLogger;
+
     FILE* _fp;
     bool _writeToFile;
     bool _writeToConsole;
 }
+
+#define gLogger Logger::global()

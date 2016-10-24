@@ -6,7 +6,9 @@
 
 #include "apecore.hpp"
 #include "helpers.hpp"
+#include "logger.hpp"
 #include "redirect.hpp"
+
 
 ClientSocket* clientSocket = nullptr;
 duk_context* initialCtx;
@@ -15,14 +17,6 @@ char* apiOverride = nullptr;
 bool hasApiPath = false;
 
 csh capstoneHandle;
-
-#ifdef _WIN32
-    #define SEPARATOR_STR "\\"
-    #define SEPARATOR_CHR '\\'
-#else
-    #define SEPARATOR_STR "/"
-    #define SEPARATOR_CHR '/'
-#endif
 
 
 void require(duk_context* ctx, char* base_path, char* override_path, const char* file)
@@ -63,6 +57,7 @@ static void socketRecv(ThreadData* threadData)
 		{
 			if (isNew)
 			{
+                gLogger->log("\t\t[==] Got new packet\n");
 				currentLen = (uint16_t)(((uint16_t)(uint8_t)oldBuffer[1] << 8) | (uint8_t)oldBuffer[0]);
 				isNew = false;
 			}
@@ -78,6 +73,8 @@ static void socketRecv(ThreadData* threadData)
 				oldBuffer = oldBuffer.substr(currentLen + 2);
 				currentLen = -1;
 				isNew = true;
+
+                gLogger->log("\t\t[==] End parsing packet\n");
 			}
 			else
 			{
@@ -93,6 +90,8 @@ static void socketRecv(ThreadData* threadData)
 
 duk_context* apecore_initialize(ExtendedInit ext)
 {
+    gLogger->log("[==] apecore_initialize...\n");
+
     // Create socket
     clientSocket = new ClientSocket(AF_INET, SOCK_STREAM, 0);
     clientSocket->connect("127.0.0.1", 25100);
@@ -109,6 +108,8 @@ duk_context* apecore_initialize(ExtendedInit ext)
 		hasApiPath = len > 0;
 	}
 
+    gLogger->log("\t[??] hasApiPath=%d, path=%s\n", hasApiPath, apiPath);
+
 	duk_context* ctx = apecore_createHeap(ext);
 	initialCtx = ctx;
 
@@ -120,6 +121,7 @@ duk_context* apecore_initialize(ExtendedInit ext)
 #endif
 	if (cs_open(CS_ARCH_X86, mode, &capstoneHandle) != CS_ERR_OK)
 	{
+        gLogger->log("\t[--] Could not open Capstone\n");
 		// Notify of the error
 	}
 
@@ -128,10 +130,11 @@ duk_context* apecore_initialize(ExtendedInit ext)
 
     if (clientSocket->lastError() != SocketError::NONE)
     {
-        printf("ERROR SOCKET %d\n", (int)clientSocket->lastError());
+        gLogger->log("\t[--] Socket error = %d\n", (int)clientSocket->lastError());
     }
     else
     {
+        gLogger->log("\t[++] Start receiving\n");
 		ape::platform::createThread((ThreadFunction)socketRecv, new ThreadData{ clientSocket, ctx });
     }
 
@@ -140,6 +143,8 @@ duk_context* apecore_initialize(ExtendedInit ext)
 
 duk_context* apecore_createHeap(ExtendedInit ext)
 {
+    gLogger->log("\t[==] Creating heap\n");
+
     duk_context* ctx = duk_create_heap_default();
 
     // Allow setHook to be called from inside JS
@@ -172,6 +177,8 @@ duk_context* apecore_createHeap(ExtendedInit ext)
 
     if (hasApiPath)
     {
+        gLogger->log("\t\t[==] Requiring API files\n");
+
         // Add all API files
         require(ctx, apiPath, apiOverride, "../../jsAPI/eval_js.js");
         require(ctx, apiPath, apiOverride, "../../jsAPI/call_convention.js");
@@ -187,6 +194,7 @@ duk_context* apecore_createHeap(ExtendedInit ext)
     }
     else
     {
+        gLogger->log("\t\t[--] API files could not be required\n");
         // Notify of error via protocol
     }
 
@@ -195,6 +203,7 @@ duk_context* apecore_createHeap(ExtendedInit ext)
 
 int apecore_deinitialize()
 {
+    gLogger->log("[==] Destroying heap\n");
     duk_destroy_heap(initialCtx);
     return 1;
 }

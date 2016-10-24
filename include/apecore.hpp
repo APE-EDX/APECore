@@ -2,6 +2,16 @@
 
 #include <duktape.h>
 
+
+#ifdef _WIN32
+    #define SEPARATOR_STR "\\"
+    #define SEPARATOR_CHR '\\'
+#else
+    #define SEPARATOR_STR "/"
+    #define SEPARATOR_CHR '/'
+#endif
+
+
 typedef void(*ExtendedInit)(duk_context*);
 
 duk_context* apecore_initialize(ExtendedInit);
