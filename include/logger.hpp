@@ -1,5 +1,7 @@
 #pragma once
 
+#include "apecore.hpp"
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -34,11 +36,11 @@ public:
         		while (len > 0 && path[--len] != SEPARATOR_CHR) {};
 
         		// Overwrite path from here on
-                strcpy(&apiPath[len + 1], "apelog.txt");
+                strcpy(&path[len + 1], "apelog.txt");
         	}
 
             // Open file
-            _fp = fopen(path, 'w+');
+            _fp = fopen(path, "w+");
         }
     }
 
