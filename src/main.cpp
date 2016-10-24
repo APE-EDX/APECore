@@ -57,7 +57,9 @@ static void socketRecv(ThreadData* threadData)
         std::string buffer = threadData->clientSocket->recv();
 		oldBuffer += buffer;
 
-		while (oldBuffer.length() >= 2)
+        // If it is a new packet, wait to have at least 2 bytes (packet length)
+        // Otherwise, simply wait for at least 1 byte
+		while ((isNew && oldBuffer.length() >= 2) || (!isNew && oldBuffer.length() > currentLen))
 		{
 			if (isNew)
 			{
@@ -79,6 +81,8 @@ static void socketRecv(ThreadData* threadData)
 			}
 			else
 			{
+                // Let it have some rest time
+                sleep
 				break;
 			}
 		}

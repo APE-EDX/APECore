@@ -25,17 +25,17 @@ public:
                 {
 						if (address == NULL)
 						{
-							address = (void*)((uintptr_t)getLibraryOEP() + (uintptr_t)getLibrarySize());
+							address = (void*)((uintptr_t)ape::platform::getLibraryOEP() + (uintptr_t)ape::platform::getLibrarySize());
 						}
 
                         for (int i = 0; i < 20; ++i)
                         {
 							address = (void*)((uintptr_t)address + i * 0x10000);
-							VirtualState state = virtualMemoryState(address);
+							VirtualState state = ape::platform::virtualMemoryState(address);
 
 							if (state == VirtualState::FREE)
 							{
-								mem = (uintptr_t)virtualMemoryCommit(address, 0x10000, MemoryProtect::EXECUTE_READWRITE);
+								mem = (uintptr_t)ape::platform::virtualMemoryCommit(address, 0x10000, MemoryProtect::EXECUTE_READWRITE);
 								if (mem)
 								{
 									_lastMemory = mem + size;

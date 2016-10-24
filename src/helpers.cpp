@@ -18,7 +18,7 @@ duk_ret_t addressOf(duk_context *ctx)
     const char* libname = duk_to_string(ctx, 0);
     const char* method = duk_to_string(ctx, 1);
 
-	uintptr_t addr = (uintptr_t)methodAddress(libname, method);
+	uintptr_t addr = (uintptr_t)ape::platform::methodAddress(libname, method);
     duk_push_pointer(ctx, (void*)addr);
 
     return 1;
@@ -109,7 +109,7 @@ duk_ret_t sigScan(duk_context* ctx)
 	size_t nbytes = len / 2;
 	bool* mask = new bool[len];
 	uint8_t* hex = new uint8_t[nbytes];
-	
+
 	bool pair = true;
 	for (size_t i = 0; i < len; ++i, pair = !pair)
 	{
@@ -135,8 +135,8 @@ duk_ret_t sigScan(duk_context* ctx)
 	}
 
 	uintptr_t foundAddress = 0;
-	uintptr_t baseAddress = (uintptr_t)getProcessOEP();
-	uint32_t moduleSize = getProcessSize();
+	uintptr_t baseAddress = (uintptr_t)ape::platform::getProcessOEP();
+	uint32_t moduleSize = ape::platform::getProcessSize();
 	uintptr_t finalAddress = baseAddress + moduleSize;
 	uintptr_t EOR;
 	uint8_t x;
@@ -144,7 +144,7 @@ duk_ret_t sigScan(duk_context* ctx)
 	for (uintptr_t currentAddress = baseAddress; currentAddress < finalAddress && foundAddress == 0; ++currentAddress)
 	{
 		size_t size;
-		MemoryProtect protect = virtualMemoryProtectState((void*)currentAddress, &size);
+		MemoryProtect protect = ape::platform::virtualMemoryProtectState((void*)currentAddress, &size);
 		if (protect != MemoryProtect::EXECUTE_READWRITE && protect != MemoryProtect::EXECUTE_READ)
 		{
 			if (skipNonExecutable || (protect != MemoryProtect::READ && protect != MemoryProtect::READWRITE))
@@ -154,7 +154,7 @@ duk_ret_t sigScan(duk_context* ctx)
 			}
 		}
 
-		// TODO: Use a better algorithm, something like 
+		// TODO: Use a better algorithm, something like
 		EOR = currentAddress + size - nbytes;
 		for (; currentAddress < EOR; ++currentAddress)
 		{

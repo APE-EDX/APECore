@@ -291,7 +291,7 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 
 	// TODO: It's 12 not 15
 	MemoryProtect oldProtect;
-	virtualMemoryProtect((void*)address, len, MemoryProtect::EXECUTE_READWRITE, &oldProtect);
+	ape::platform::virtualMemoryProtect((void*)address, len, MemoryProtect::EXECUTE_READWRITE, &oldProtect);
 
 	// JMP dest
 	*(uint8_t*)(address + 0) = 0x48;
@@ -305,7 +305,7 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 		*(uint8_t*)(address + i) = 0x90;
 	}
 
-	virtualMemoryProtect((void*)address, len, oldProtect, &oldProtect);
+	ape::platform::virtualMemoryProtect((void*)address, len, oldProtect, &oldProtect);
 
 	duk_push_boolean(ctx, true);
 	return 1;  /* one return value */
@@ -537,7 +537,7 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 	duk_put_prop_string(ctx, -2, "fn_org_addr");
 
 	MemoryProtect oldProtect;
-	virtualMemoryProtect((void*)address, len, MemoryProtect::EXECUTE_READWRITE, &oldProtect);
+	ape::platform::virtualMemoryProtect((void*)address, len, MemoryProtect::EXECUTE_READWRITE, &oldProtect);
 
 	// JMP dest
 	*(uint8_t*)(address) = 0xE9;
@@ -548,7 +548,7 @@ duk_ret_t initializeRedirection(duk_context *ctx)
 		*(uint8_t*)(address + i) = 0x90;
 	}
 
-	virtualMemoryProtect((void*)address, 5, oldProtect, &oldProtect);
+	ape::platform::virtualMemoryProtect((void*)address, 5, oldProtect, &oldProtect);
 
     return 0;  /* undefined, default */
 }
@@ -570,9 +570,9 @@ duk_ret_t restoreRedirection(duk_context* ctx)
 	int total = duk_to_int(ctx, -1);
 
 	MemoryProtect oldProtect;
-	virtualMemoryProtect(address, total, MemoryProtect::EXECUTE_READWRITE, &oldProtect);
+	ape::platform::virtualMemoryProtect(address, total, MemoryProtect::EXECUTE_READWRITE, &oldProtect);
 	memcpy(address, original, total);
-	virtualMemoryProtect(address, total, oldProtect, &oldProtect);
+	ape::platform::virtualMemoryProtect(address, total, oldProtect, &oldProtect);
 
 	duk_push_boolean(ctx, true);
 	return 1;
