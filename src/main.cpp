@@ -82,7 +82,7 @@ static void socketRecv(ThreadData* threadData)
 			else
 			{
                 // Let it have some rest time
-                sleep
+                ape::platform::sleep(100);
 				break;
 			}
 		}
@@ -99,7 +99,7 @@ duk_context* apecore_initialize(ExtendedInit ext)
 
 	// Get current path
 	{
-		size_t len = getLibraryPath(apiPath, sizeof(apiPath));
+		size_t len = ape::platform::getLibraryPath(apiPath, sizeof(apiPath));
 
 		// Find last / and
 		while (len > 0 && apiPath[--len] != SEPARATOR_CHR) {};
@@ -132,7 +132,7 @@ duk_context* apecore_initialize(ExtendedInit ext)
     }
     else
     {
-		createThread((ThreadFunction)socketRecv, new ThreadData{ clientSocket, ctx });
+		ape::platform::createThread((ThreadFunction)socketRecv, new ThreadData{ clientSocket, ctx });
     }
 
     return ctx;

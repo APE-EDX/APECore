@@ -26,12 +26,12 @@ enum class MemoryProtect
 };
 
 // Interface types
+typedef void*(*ThreadFunction)(void*);
+
 namespace ape
 {
     namespace platform
     {
-        typedef void*(*ThreadFunction)(void*);
-
         // Platform specific external functions
         extern void sleep(uint32_t ms);
         extern bool createThread(ThreadFunction, void* parameter);
