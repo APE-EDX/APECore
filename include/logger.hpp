@@ -72,6 +72,6 @@ private:
     FILE* _fp;
     bool _writeToFile;
     bool _writeToConsole;
-}
+};
 
 #define gLogger Logger::global()
